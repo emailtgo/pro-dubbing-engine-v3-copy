@@ -10,6 +10,16 @@ from engine.models import DubbingSentence
 # Load environment variables
 load_dotenv()
 
+def get_api_keys():
+    """Get API keys from Streamlit Secrets or Environment Variables."""
+    # 1. Try Streamlit Secrets (for Streamlit Cloud)
+    if "GEMINI_API_KEYS" in st.secrets:
+        return st.secrets["GEMINI_API_KEYS"]
+    
+    # 2. Try Environment Variables (for Local with .env)
+    env_keys = os.getenv("GEMINI_API_KEYS", "")
+    return env_keys
+
 # --- Streamlit UI --- 
 st.set_page_config(layout="wide", page_title="Pro Dubbing Engine V3")
 
@@ -34,7 +44,7 @@ if "final_srt_content" not in st.session_state:
 # --- Configuration Sidebar ---
 with st.sidebar:
     st.header("Configuration")
-    gemini_api_keys_str = st.text_input("Gemini API Keys (comma-separated)", type="password", value=os.getenv("GEMINI_API_KEYS", ""))
+    gemini_api_keys_str = st.text_input("Gemini API Keys (comma-separated)", type="password", value=get_api_keys())
     output_language = st.selectbox("Output Language", ["my", "en", "ja", "ko", "th", "vi"], index=0)
     voice_gender = st.selectbox("Voice Gender", ["Male", "Female"], index=0)
     num_workers = st.slider("Number of Parallel Workers", 1, 10, 5)
