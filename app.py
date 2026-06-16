@@ -48,7 +48,7 @@ with st.sidebar:
     output_language = st.selectbox("Output Language", ["my", "en", "ja", "ko", "th", "vi"], index=0)
     voice_gender = st.selectbox("Voice Gender", ["Male", "Female"], index=0)
     num_workers = st.slider("Number of Parallel Workers", 1, 10, 5)
-    tolerance = st.slider("TTS Duration Tolerance (seconds)", 0.1, 1.0, 0.3, 0.1)
+    tolerance = 0.3 # Hardcoded to 0.3s as requested by user
     max_ai_retries = st.slider("Max AI Rewriting Retries", 1, 50, 50) # User requested 50
     max_rpm = 9 # Hardcoded to 9 RPM as requested by user
     bitrate = st.selectbox("Audio Bitrate", ["96k", "128k", "192k", "256k"], index=2)
