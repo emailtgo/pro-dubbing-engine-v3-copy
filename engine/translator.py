@@ -42,9 +42,9 @@ class Translator:
             if key:
                 return genai.Client(api_key=key)
             
-            # All keys are at limit, wait a bit and loop again after releasing the lock
-            print("All API keys are at rate limit. Waiting 5 seconds...")
-            await asyncio.sleep(5)
+            # All keys are at limit, wait 20 seconds as requested by user
+            print("All API keys are at rate limit (9 RPM). Waiting 20 seconds before retrying...")
+            await asyncio.sleep(20)
 
     async def translate_batch_parallel(self, text: str, target_lang: str, num_workers: int = 5) -> str:
         """Translate text in parallel by splitting it into chunks, trying to split at sentence ends."""
