@@ -12,7 +12,7 @@ class Translator:
         self.current_key_index = 0
         self.api_lock = asyncio.Lock()
         self.key_usage = {key: [] for key in self.api_keys}
-        self.gemini_model = 'gemini-1.5-flash' # Standard Gemini 1.5 Flash model
+        self.gemini_model = 'gemini-3.5-flash' # Latest stable model as of June 2026
 
     async def _get_next_client(self):
         if not self.api_keys:
