@@ -51,7 +51,17 @@ else:
     # --- STEP 1: INPUT ---
     if st.session_state.step == "input":
         st.header("Step 1: Input Script")
-        input_text = st.text_area("Paste Text or SRT content here", height=300)
+        
+        input_method = st.radio("Choose input method:", ("Text Input", "Upload .srt/.txt File"))
+        
+        input_text = ""
+        if input_method == "Text Input":
+            input_text = st.text_area("Paste Text or SRT content here", height=300)
+        else:
+            uploaded_file = st.file_uploader("Upload .srt or .txt file", type=["srt", "txt"])
+            if uploaded_file is not None:
+                input_text = uploaded_file.read().decode("utf-8")
+                st.text_area("Uploaded Content Preview", value=input_text, height=200, disabled=True)
         
         if st.button("🚀 Process & Translate"):
             if input_text:
@@ -62,7 +72,7 @@ else:
                     st.session_state.step = "review"
                     st.rerun()
             else:
-                st.warning("Please enter some text.")
+                st.warning("Please provide input content.")
 
     # --- STEP 2: REVIEW & CHUNK ---
     elif st.session_state.step == "review":
