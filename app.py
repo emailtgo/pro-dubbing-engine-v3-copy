@@ -66,9 +66,9 @@ with st.sidebar:
     output_language = st.selectbox("Output Language", ["my", "en", "ja", "ko", "th", "vi"], index=0)
     voice_gender = st.selectbox("Voice Gender", ["Male", "Female"], index=0)
     num_workers = st.slider("Number of Parallel Workers", 1, 10, 5)
-    bitrate = st.selectbox("Audio Bitrate", ["96k", "128k", "192k", "256k"], index=2)
 
     # Hardcoded values as requested
+    bitrate = "192k"
     tolerance = 0.3 
     max_ai_retries = 50
     max_rpm = 9 
