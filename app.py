@@ -44,34 +44,45 @@ if "final_srt_content" not in st.session_state:
 # --- Configuration Sidebar ---
 with st.sidebar:
     st.header("Configuration")
-    gemini_api_keys_str = st.text_input("Gemini API Keys (comma-separated)", type="password", value=get_api_keys())
+    
+    # Get keys silently
+    raw_keys = get_api_keys()
+    api_keys = [key.strip() for key in raw_keys.split(",") if key.strip()]
+    
+    if api_keys:
+        st.success(f"✅ {len(api_keys)} Gemini API Keys Loaded")
+    else:
+        st.error("❌ No Gemini API Keys found in Secrets or .env")
+        # Fallback input for manual entry if needed, but using password type to keep it hidden
+        manual_keys = st.text_input("Manual API Keys (if not in secrets)", type="password")
+        if manual_keys:
+            api_keys = [key.strip() for key in manual_keys.split(",") if key.strip()]
+
     output_language = st.selectbox("Output Language", ["my", "en", "ja", "ko", "th", "vi"], index=0)
     voice_gender = st.selectbox("Voice Gender", ["Male", "Female"], index=0)
     num_workers = st.slider("Number of Parallel Workers", 1, 10, 5)
-    tolerance = 0.3 # Hardcoded to 0.3s as requested by user
-    max_ai_retries = st.slider("Max AI Rewriting Retries", 1, 50, 50) # User requested 50
-    max_rpm = 9 # Hardcoded to 9 RPM as requested by user
     bitrate = st.selectbox("Audio Bitrate", ["96k", "128k", "192k", "256k"], index=2)
 
+    # Hardcoded values as requested
+    tolerance = 0.3 
+    max_ai_retries = 50
+    max_rpm = 9 
+
     if st.button("Initialize Engine"):
-        if not gemini_api_keys_str:
+        if not api_keys:
             st.error("Please provide at least one Gemini API Key.")
         else:
-            api_keys = [key.strip() for key in gemini_api_keys_str.split(",") if key.strip()]
-            if not api_keys:
-                st.error("Please provide valid Gemini API Keys.")
-            else:
-                st.session_state.engine = ProDubbingEngine(
-                    api_keys=api_keys,
-                    output_language=output_language,
-                    voice_gender=voice_gender,
-                    tolerance=tolerance,
-                    max_ai_retries=max_ai_retries,
-                    max_rpm=max_rpm,
-                    bitrate=bitrate
-                )
-                st.success("Pro Dubbing Engine Initialized!")
-                st.session_state.step = 1 # Reset to step 1 on re-initialization
+            st.session_state.engine = ProDubbingEngine(
+                api_keys=api_keys,
+                output_language=output_language,
+                voice_gender=voice_gender,
+                tolerance=tolerance,
+                max_ai_retries=max_ai_retries,
+                max_rpm=max_rpm,
+                bitrate=bitrate
+            )
+            st.success("Pro Dubbing Engine Initialized!")
+            st.session_state.step = 1 # Reset to step 1 on re-initialization
 
 # --- Main Content Area ---
 if st.session_state.engine is None:
