@@ -47,7 +47,12 @@ with st.sidebar:
     
     # Get keys silently
     raw_keys = get_api_keys()
-    api_keys = [key.strip() for key in raw_keys.split(",") if key.strip()]
+    if isinstance(raw_keys, list):
+        api_keys = [str(key).strip() for key in raw_keys if str(key).strip()]
+    elif isinstance(raw_keys, str):
+        api_keys = [key.strip() for key in raw_keys.split(",") if key.strip()]
+    else:
+        api_keys = []
     
     if api_keys:
         st.success(f"✅ {len(api_keys)} Gemini API Keys Loaded")
