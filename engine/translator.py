@@ -12,7 +12,7 @@ class Translator:
         self.current_key_index = 0
         self.api_lock = asyncio.Lock()
         self.key_usage = {key: [] for key in self.api_keys}
-        self.gemini_model = 'gemini-2.0-flash' # Using a stable flash model
+        self.gemini_model = 'gemini-1.5-flash' # Using a highly stable flash model
 
     async def _get_next_client(self):
         if not self.api_keys:
@@ -65,8 +65,8 @@ class Translator:
             clean_text = re.sub(r'\n```$', '', clean_text)
             return clean_text.strip()
         except Exception as e:
-            print(f"Translation error: {e}")
-            return ""
+            print(f"Translation error: {str(e)}")
+            return f"ERROR: {str(e)}"
 
     async def rewrite_to_fit_duration(self, original_text: str, current_text: str, target_duration: float, current_duration: float, lang: str) -> str:
         """Rewrite text to fit duration, providing context of the previous attempt."""

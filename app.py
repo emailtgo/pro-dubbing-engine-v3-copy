@@ -69,12 +69,14 @@ else:
                     translated_srt = st.session_state.engine.run_sync(
                         st.session_state.engine.prepare_srt(input_text)
                     )
-                    if translated_srt and len(translated_srt) > 10:
+                    if translated_srt.startswith("ERROR:"):
+                        st.error(f"AI Error: {translated_srt}")
+                    elif translated_srt and len(translated_srt) > 10:
                         st.session_state.srt_content = translated_srt
                         st.session_state.step = "review"
                         st.rerun()
                     else:
-                        st.error("AI failed to generate a valid SRT. Please try again or check your API keys.")
+                        st.error("AI failed to generate a valid SRT. The output was too short or empty.")
             else:
                 st.warning("Please provide input content.")
 
