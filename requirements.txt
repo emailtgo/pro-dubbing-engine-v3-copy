@@ -7,3 +7,4 @@ numpy
 nest_asyncio
 python-dotenv
 pandas
+audioop-lts
