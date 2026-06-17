@@ -1,6 +1,7 @@
 import asyncio
 import os
 import nest_asyncio
+import re
 from typing import List, Dict
 from engine.models import DubbingSegment, DubbingSentence, DubbingChunk
 from engine.parser import Parser
@@ -28,16 +29,21 @@ class ProDubbingEngine:
         return await self.translator.translate_text_to_srt(input_text, self.output_language)
 
     async def create_chunks(self, srt_content: str, num_chunks: int) -> List[DubbingChunk]:
-        """Parse SRT and divide into chunks for parallel processing."""
+        """Parse SRT and group segments into sentences based on punctuation."""
         segments = self.parser.parse_srt(srt_content, self.output_language)
         
-        # Group segments into sentences (Simple heuristic: 1 segment = 1 sentence for now, 
-        # but can be improved to group by punctuation)
+        # Sentence Grouping Logic
         sentences = []
-        for i, seg in enumerate(segments):
-            sentences.append(DubbingSentence([seg], i))
+        current_segments = []
+        end_markers = r'[.!?။၊၊]'
         
-        # Divide sentences into chunks
+        for seg in segments:
+            current_segments.append(seg)
+            if re.search(end_markers + r'\s*$', seg.text) or seg == segments[-1]:
+                sentences.append(DubbingSentence(current_segments, len(sentences) + 1))
+                current_segments = []
+        
+        # Divide sentences into chunks for parallel processing
         chunk_size = max(1, len(sentences) // num_chunks)
         chunks = []
         for i in range(0, len(sentences), chunk_size):
@@ -61,15 +67,20 @@ class ProDubbingEngine:
         for chunk in chunks:
             all_sentences.extend(chunk.sentences)
         
-        # Reconstruct segments from sentences
+        # Reconstruct segments from sentences for SRT generation
         final_segments = []
         for sentence in all_sentences:
+            # Distribute the adjusted sentence text back to segments if needed, 
+            # but for SRT we might just want to keep them as is or use the new text.
+            # User wants translated srt separately.
             for seg in sentence.segments:
-                seg.adjusted_text = sentence.adjusted_text
+                # Simple distribution: put full sentence text in first segment, others empty 
+                # or keep original. For now, let's keep them mapped.
                 final_segments.append(seg)
         
         final_audio_path = os.path.join("./temp_audio", "final_dubbed_audio.mp3")
-        self.audio_processor.merge_audio_files(final_segments, final_audio_path)
+        # Use sentences for merging to ensure correct timing placement
+        self.audio_processor.merge_audio_files_from_sentences(all_sentences, final_audio_path)
         
         final_srt_content = self.parser.generate_srt(final_segments)
         
