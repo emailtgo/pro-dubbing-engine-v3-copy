@@ -7,4 +7,3 @@ numpy
 nest_asyncio
 python-dotenv
 pandas
-pyaudioop # Compatibility for Python 3.13+
