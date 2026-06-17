@@ -57,9 +57,15 @@ class Translator:
         """
         
         try:
+            # Increase max_output_tokens to prevent truncation
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=8192,
+                temperature=0.1
+            )
             response = await asyncio.to_thread(
                 model.generate_content,
-                f"{prompt}\n\nCONTENT TO TRANSLATE:\n{text}"
+                f"{prompt}\n\nCONTENT TO TRANSLATE:\n{text}",
+                generation_config=generation_config
             )
             clean_text = response.text.strip()
             clean_text = re.sub(r'^```srt\n', '', clean_text)
