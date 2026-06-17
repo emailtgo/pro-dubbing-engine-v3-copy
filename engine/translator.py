@@ -42,20 +42,28 @@ class Translator:
         if not client: return ""
 
         prompt = f"""You are a professional video translator. Translate the following content into {target_lang}.
-        If the input is plain text, generate appropriate SRT timestamps based on natural speech pacing (approx 150 words per minute).
-        If the input is SRT, maintain the exact timestamps but translate the text accurately.
         
-        OUTPUT FORMAT: Strict SRT format.
+        GUIDELINES:
+        1. If the input is plain text, you MUST generate appropriate SRT timestamps (e.g., 00:00:00,000 --> 00:00:05,000) based on natural speech pacing.
+        2. If the input is already in SRT format, you MUST maintain the exact same timestamps but translate the text.
+        3. The output MUST be in valid SRT format only.
+        4. Do not include any preamble, markdown code blocks (like ```srt), or explanations.
+        
+        TARGET LANGUAGE: {target_lang}
         """
         
         try:
             response = await asyncio.to_thread(
                 client.models.generate_content,
                 model=self.gemini_model,
-                contents=f"{prompt}\n\nCONTENT:\n{text}",
-                config=types.GenerateContentConfig(temperature=0.3)
+                contents=f"{prompt}\n\nCONTENT TO TRANSLATE:\n{text}",
+                config=types.GenerateContentConfig(temperature=0.1)
             )
-            return response.text.strip()
+            # Clean up potential markdown formatting
+            clean_text = response.text.strip()
+            clean_text = re.sub(r'^```srt\n', '', clean_text)
+            clean_text = re.sub(r'\n```$', '', clean_text)
+            return clean_text.strip()
         except Exception as e:
             print(f"Translation error: {e}")
             return ""
