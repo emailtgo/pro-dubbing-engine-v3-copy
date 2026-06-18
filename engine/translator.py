@@ -1,8 +1,10 @@
 import re
 import asyncio
 import time
+import os
 from typing import List
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 class Translator:
     def __init__(self, api_keys: List[str] = None, max_rpm: int = 9):
@@ -11,15 +13,10 @@ class Translator:
         self.current_key_index = 0
         self.api_lock = asyncio.Lock()
         self.key_usage = {key: [] for key in self.api_keys}
-        # Using the model name requested by the user
-        self.gemini_model_name = 'gemini-3.5-flash'
+        # As per screenshot: gemini-3-flash
+        self.gemini_model_name = 'gemini-3-flash'
 
-    def _setup_genai(self, api_key: str):
-        genai.configure(api_key=api_key)
-        # Setting API version to v1beta as suggested in the screenshot
-        return genai.GenerativeModel(self.gemini_model_name)
-
-    async def _get_next_model(self):
+    async def _get_next_client(self):
         if not self.api_keys:
             return None
         
@@ -38,12 +35,12 @@ class Translator:
                         break
             
             if key:
-                return self._setup_genai(key)
+                return genai.Client(api_key=key)
             await asyncio.sleep(5)
 
     async def translate_text_to_srt(self, text: str, target_lang: str) -> str:
-        model = await self._get_next_model()
-        if not model: return ""
+        client = await self._get_next_client()
+        if not client: return ""
 
         prompt = f"""You are a professional video translator. Translate the following content into {target_lang}.
         
@@ -57,16 +54,19 @@ class Translator:
         """
         
         try:
-            # Increase max_output_tokens to prevent truncation
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=8192,
-                temperature=0.1
+            # Configuration as per screenshot: max_output_tokens=65536, temperature=0.7
+            config = types.GenerateContentConfig(
+                max_output_tokens=65536,
+                temperature=0.7
             )
+            
             response = await asyncio.to_thread(
-                model.generate_content,
-                f"{prompt}\n\nCONTENT TO TRANSLATE:\n{text}",
-                generation_config=generation_config
+                client.models.generate_content,
+                model=self.gemini_model_name,
+                contents=f"{prompt}\n\nCONTENT TO TRANSLATE:\n{text}",
+                config=config
             )
+            
             clean_text = response.text.strip()
             clean_text = re.sub(r'^```srt\n', '', clean_text)
             clean_text = re.sub(r'\n```$', '', clean_text)
@@ -75,8 +75,8 @@ class Translator:
             return f"ERROR: {str(e)}"
 
     async def rewrite_to_fit_duration(self, original_text: str, current_text: str, target_duration: float, current_duration: float, lang: str) -> str:
-        model = await self._get_next_model()
-        if not model: return current_text
+        client = await self._get_next_client()
+        if not client: return current_text
 
         diff = current_duration - target_duration
         action = "shorten" if diff > 0 else "lengthen"
@@ -94,9 +94,16 @@ class Translator:
         """
         
         try:
+            config = types.GenerateContentConfig(
+                max_output_tokens=65536,
+                temperature=0.7
+            )
+            
             response = await asyncio.to_thread(
-                model.generate_content,
-                prompt
+                client.models.generate_content,
+                model=self.gemini_model_name,
+                contents=prompt,
+                config=config
             )
             return response.text.strip()
         except Exception:
