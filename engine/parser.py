@@ -27,9 +27,10 @@ class Parser:
         matches = re.finditer(pattern, srt_content, re.DOTALL)
         
         for i, match in enumerate(matches):
-            start_s = self._time_to_seconds(match.group(2))
-            end_s = self._time_to_seconds(match.group(3))
-            text = match.group(4).replace('\n', ' ').strip()
+            start_s = self._time_to_seconds(match.group(2)) if match.group(2) else 0.0
+            end_s = self._time_to_seconds(match.group(3)) if match.group(3) else 0.0
+            text_raw = match.group(4) if match.group(4) else ""
+            text = text_raw.replace('\n', ' ').strip()
             segments.append(DubbingSegment(start_s, end_s, text, i, lang))
         return segments
 

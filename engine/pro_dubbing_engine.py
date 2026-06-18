@@ -39,7 +39,9 @@ class ProDubbingEngine:
         
         for seg in segments:
             current_segments.append(seg)
-            if re.search(end_markers + r'\s*$', seg.text) or seg == segments[-1]:
+            # Ensure seg.text is a string before regex search
+            text_to_search = seg.text if seg.text is not None else ""
+            if re.search(end_markers + r'\s*$', text_to_search) or seg == segments[-1]:
                 sentences.append(DubbingSentence(current_segments, len(sentences) + 1))
                 current_segments = []
         
