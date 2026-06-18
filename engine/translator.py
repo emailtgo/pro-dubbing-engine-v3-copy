@@ -40,7 +40,7 @@ class Translator:
 
     async def translate_text_to_srt(self, text: str, target_lang: str) -> str:
         client = await self._get_next_client()
-        if not client: return ""
+        if not client: return "ERROR: No valid API keys found or configured."
 
         prompt = f"""You are a professional video translator. Translate the following content into {target_lang}.
         
@@ -67,6 +67,9 @@ class Translator:
                 config=config
             )
             
+            if not response or not response.text:
+                return "ERROR: AI returned an empty response."
+                
             clean_text = response.text.strip()
             clean_text = re.sub(r'^```srt\n', '', clean_text)
             clean_text = re.sub(r'\n```$', '', clean_text)
